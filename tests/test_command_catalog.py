@@ -13,6 +13,7 @@ from soft_ue_cli.command_catalog import (  # noqa: E402
     iter_command_metadata,
     iter_removed_command_metadata,
 )
+from soft_ue_cli.weldborn_commands import WELDBORN_TOOL_COMMANDS
 
 
 def test_catalog_marks_umg_layout_as_canonical_offline_command():
@@ -419,3 +420,33 @@ def test_catalog_marks_session_family_as_bridge_commands():
     assert ask["category"] == "session"
     assert leave["layer"] == "bridge"
     assert leave["requires_bridge"] is True
+
+
+def test_weldborn_tool_catalog_has_one_cli_verb_per_tool():
+    status_tool_names = {
+        "weldborn.input.geometry",
+        "weldborn.input.widget_geometry",
+        "weldborn.wait.frames",
+        "weldborn.palette.list",
+        "weldborn.palette.select",
+        "weldborn.authoring.snapshot",
+        "weldborn.authoring.cancel",
+        "weldborn.authoring.bay_reset",
+        "weldborn.authoring.select_port",
+        "weldborn.authoring.layout",
+        "weldborn.step.creator.status",
+        "weldborn.step.creator.open",
+        "weldborn.step.creator.close",
+        "weldborn.step.creator.run_import",
+        "weldborn.step.creator.inspect_session",
+        "weldborn.step.creator.apply_session",
+        "weldborn.step.creator.clear_preview",
+    }
+    catalog_names = {
+        entry["name"]
+        for entry in command_metadata_as_json()["commands"]
+    }
+
+    assert set(WELDBORN_TOOL_COMMANDS) == status_tool_names
+    assert len(set(WELDBORN_TOOL_COMMANDS.values())) == len(status_tool_names)
+    assert set(WELDBORN_TOOL_COMMANDS.values()) <= catalog_names

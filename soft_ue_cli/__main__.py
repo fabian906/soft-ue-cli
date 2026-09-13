@@ -12,6 +12,7 @@ import sys
 import time
 from pathlib import Path
 
+from . import __version__
 from .client import call_tool, call_tool_ex, health_check, record_notices
 from .command_aliases import COMMAND_ALIAS_PREFIXES, REMOVED_COMMAND_MIGRATIONS
 from .diagnostics import (
@@ -5454,6 +5455,11 @@ def build_parser(*, include_removed: bool = False) -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+    parser.add_argument(
         "--server",
         metavar="URL",
         help=(
@@ -9372,6 +9378,10 @@ def build_parser(*, include_removed: bool = False) -> argparse.ArgumentParser:
         help="Maximum number of matched tests to run",
     )
     p_auto_tests.set_defaults(func=cmd_run_automation_tests)
+
+    from .weldborn_commands import add_weldborn_command_parsers
+
+    add_weldborn_command_parsers(sub)
 
     _add_canonical_command_families(sub)
     if not include_removed:
