@@ -111,7 +111,7 @@ def cmd_input_world(args: argparse.Namespace) -> None:
 def cmd_input_widget(args: argparse.Namespace) -> None:
     geometry = _bridge_call(
         "weldborn.input.widget_geometry",
-        {"world": "pie", "widget_path": args.path},
+        {"world": "pie", "path": args.path},
     )
     screen = _pair(geometry.get("screen_center_abs"), "screen_center_abs")
     try:
@@ -122,7 +122,21 @@ def cmd_input_widget(args: argparse.Namespace) -> None:
 
 
 def cmd_wait_frames(args: argparse.Namespace) -> None:
-    _run_and_print("weldborn.wait.frames", {"game_ticks": args.game, "slate_ticks": args.slate})
+    if args.game < 0 or args.slate < 0:
+        raise WeldbornCommandError("wait counts must be non-negative")
+    responses = [
+        _bridge_call("weldborn.wait.frames", {})
+        for _ in range(max(args.game, args.slate))
+    ]
+    _print_json(
+        {
+            "ok": True,
+            "game_ticks": args.game,
+            "slate_ticks": args.slate,
+            "dispatches": len(responses),
+            "last": responses[-1] if responses else None,
+        }
+    )
 
 
 def cmd_palette_list(args: argparse.Namespace) -> None:
@@ -130,7 +144,16 @@ def cmd_palette_list(args: argparse.Namespace) -> None:
 
 
 def cmd_palette_select(args: argparse.Namespace) -> None:
-    _run_and_print("weldborn.palette.select", {"world": "pie", "content_id": args.content_id})
+    result = _bridge_call(
+        "weldborn.palette.select",
+        {"world": "pie", "content_id": args.content_id},
+    )
+    if result.get("ok"):
+        result["settled_frame"] = _bridge_call("weldborn.wait.frames", {})
+        result["settled_snapshot"] = _bridge_call(
+            "weldborn.authoring.snapshot", {"world": "pie"}
+        )
+    _print_json(result)
 
 
 def cmd_authoring_snapshot(args: argparse.Namespace) -> None:
