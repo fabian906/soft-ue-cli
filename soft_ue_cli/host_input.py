@@ -54,6 +54,23 @@ def screen_to_viewport(
         (screen_abs[1] - viewport_origin_abs[1]) / slate_dpi_scale,
     )
 
+def geometry_to_screen(
+    projected_viewport_px: tuple[float, float],
+    geometry: dict[str, object],
+) -> tuple[float, float]:
+    """Use the bridge's PIE viewport origin, never a window client origin."""
+    raw_origin = geometry.get("pie_viewport_origin_abs")
+    if not isinstance(raw_origin, (list, tuple)) or len(raw_origin) != 2:
+        raise HostInputError("pie_viewport_origin_abs must contain two numbers")
+    raw_scale = geometry.get("slate_dpi_scale")
+    if not isinstance(raw_scale, (int, float)):
+        raise HostInputError("slate_dpi_scale must be a number")
+    return viewport_to_screen(
+        projected_viewport_px,
+        (float(raw_origin[0]), float(raw_origin[1])),
+        float(raw_scale),
+    )
+
 
 class CtypesWindowsInputBackend:
     """Small user32 adapter. It is created only when input is sent."""

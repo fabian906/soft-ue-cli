@@ -7,6 +7,7 @@ import pytest
 from soft_ue_cli.host_input import (
     HostInputError,
     HostWindow,
+    geometry_to_screen,
     dispatch_click,
     screen_to_viewport,
     viewport_to_screen,
@@ -43,16 +44,17 @@ def test_host_input_round_trip_applies_slate_dpi_scale() -> None:
 
 
 def test_host_input_uses_pie_viewport_origin_not_window_client_origin() -> None:
-    viewport_origin = (132.0, 196.0)
-    window_client_origin = (120.0, 150.0)
+    geometry = {
+        "pie_viewport_origin_abs": [132.0, 196.0],
+        "window_client_origin_abs": [120.0, 150.0],
+        "slate_dpi_scale": 1.0,
+    }
     projected = (40.0, 60.0)
 
-    screen = viewport_to_screen(projected, viewport_origin, 1.0)
+    screen = geometry_to_screen(projected, geometry)
 
     assert screen == pytest.approx((172.0, 256.0))
-    assert screen != pytest.approx(
-        (window_client_origin[0] + projected[0], window_client_origin[1] + projected[1])
-    )
+    assert screen != pytest.approx((160.0, 210.0))
 
 
 def test_host_input_refuses_wrong_window_without_dispatch() -> None:

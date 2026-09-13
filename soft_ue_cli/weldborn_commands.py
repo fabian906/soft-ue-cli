@@ -6,7 +6,12 @@ import argparse
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from .host_input import HostInputError, dispatch_click, screen_to_viewport, viewport_to_screen
+from .host_input import (
+    HostInputError,
+    dispatch_click,
+    geometry_to_screen,
+    screen_to_viewport,
+)
 
 
 class WeldbornCommandError(RuntimeError):
@@ -93,11 +98,11 @@ def cmd_input_click(args: argparse.Namespace) -> None:
 
 def cmd_input_world(args: argparse.Namespace) -> None:
     position = _vector(args.pos, 3, "--pos")
-    geometry = _bridge_call("weldborn.input.geometry", {"world": "pie", "position": position})
+    geometry = _bridge_call("weldborn.input.geometry", {"world": "pie", "pos": position})
     projected = _pair(geometry.get("projected_viewport_px"), "projected_viewport_px")
     origin = _pair(geometry.get("pie_viewport_origin_abs"), "pie_viewport_origin_abs")
     scale = float(geometry.get("slate_dpi_scale", 0.0))
-    screen = viewport_to_screen(projected, origin, scale)
+    screen = geometry_to_screen(projected, geometry)
     round_trip = screen_to_viewport(screen, origin, scale)
     if abs(round_trip[0] - projected[0]) > 0.01 or abs(round_trip[1] - projected[1]) > 0.01:
         raise WeldbornCommandError("world projection failed the viewport round trip")
